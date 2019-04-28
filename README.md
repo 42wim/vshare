@@ -92,6 +92,9 @@ Or via web https://yourvshareserver.tld/info/s.ikctGfmUZ9Yv3wEmUfTtsfyH
 #### Use the vshare URL from user A
 https://yourvshareserver.tld/info/s.ikctGfmUZ9Yv3wEmUfTtsfyH
 
+![image](https://user-images.githubusercontent.com/1810977/56870119-d0fd7700-6a0a-11e9-8d59-8e9e6aca2c37.png)
+
+
 ## Example - advanced
 ### TTL of 1 hour
 
