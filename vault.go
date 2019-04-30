@@ -22,21 +22,7 @@ func vaultInit() (*api.Client, error) {
 // setCubby sets the secret in a cubbyhole and returns a response-wrapping token
 func setCubby(v *api.Client, secretText, ttl string, encode bool) (string, error) {
 	vpath := "cubbyhole/" + cubbyPrefix + strconv.FormatInt(time.Now().UnixNano(), 10)
-	ta := v.Auth().Token()
-	tcr := api.TokenCreateRequest{
-		Policies:       []string{"default"},
-		TTL:            "15s",
-		ExplicitMaxTTL: "15s",
-		NumUses:        2, // 1 to write, 1 to read to get a wrapped token
-	}
-	// create the token
-	s, err := ta.Create(&tcr)
-	if err != nil {
-		return "", err
-	}
-	// use the new token
-	v.SetToken(s.Auth.ClientToken)
-	_, err = v.Logical().Write(vpath, map[string]interface{}{
+	_, err := v.Logical().Write(vpath, map[string]interface{}{
 		"secret": secretText,
 		"encode": encode,
 	})
@@ -48,7 +34,7 @@ func setCubby(v *api.Client, secretText, ttl string, encode bool) (string, error
 		return ttl
 	})
 	// Read again to get a wrapped token
-	s, err = v.Logical().Read(vpath)
+	s, err := v.Logical().Read(vpath)
 	if err != nil {
 		return "", err
 	}
