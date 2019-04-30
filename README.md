@@ -8,8 +8,7 @@ vshare uses [vault](https://www.vaultproject.io) and [response-wrapping tokens](
 * [vault](https://www.vaultproject.io)
 
 ## Flow
-Vshare will use your `VAULT_TOKEN` and `VAULT_ADDR` environment variables to create a new token with the `default` policy and a lifetime of 15s and 2 uses. \
-This token will be used to put the secret in the `cubbyhole/vshare-nanosecondtimestamp` key. (which will expire in 15s) \
+Vshare will use your `VAULT_TOKEN` and `VAULT_ADDR` environment variables to put the secret in the `cubbyhole/vshare-nanosecondtimestamp` key.
 We will then read the `cubbyhole/vshare-nanosecondtimestamp` to get a response-wrapping token with your specified TTL (default 15m) which can be used only once to get the secret back.
 
 ## Download
