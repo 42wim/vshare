@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -35,7 +34,6 @@ func setCubby(v *api.Client, secretText, ttl string, encode bool) (string, error
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(s.Auth.ClientToken, vpath)
 	// use the new token
 	v.SetToken(s.Auth.ClientToken)
 	_, err = v.Logical().Write(vpath, map[string]interface{}{

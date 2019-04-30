@@ -9,6 +9,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/h2non/filetype"
 )
 
 const maxSize = 400000
@@ -77,16 +79,22 @@ func handleEncodedFile(input string) error {
 	if err != nil {
 		return err
 	}
+	filename := "vshare.output"
+	kind, _ := filetype.Match(data)
+	if kind != filetype.Unknown {
+		filename = "vshare." + kind.Extension
+	}
+
 	// just reading from stdin for the secret
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("The secret is a file, enter a filename to safe the output in (default: \"vshare.output\"): ")
+	fmt.Printf("The secret is a file, enter a filename to safe the output in (default: \"%s\"): ", filename)
 	output, err := reader.ReadString('\n')
 	if err != nil {
 		return err
 	}
 	output = strings.TrimSpace(output)
 	if output == "" {
-		output = "vshare.output"
+		output = filename
 	}
 	err = ioutil.WriteFile(output, data, 0600)
 	if err != nil {
@@ -171,7 +179,12 @@ func main() {
 		fmt.Println()
 		fmt.Printf("The token to share is %s\n", token)
 		url := os.Getenv("VSHARE_URL")
-		if url != "" {
+		if url == "" {
+			return
+		}
+		if *file != "" {
+			fmt.Printf("Or via web %s/info/%s?file=%s\n", url, token, *file)
+		} else {
 			fmt.Printf("Or via web %s/info/%s\n", url, token)
 		}
 		return
