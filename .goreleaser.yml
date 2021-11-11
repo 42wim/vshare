@@ -18,18 +18,21 @@ builds:
     - arm
     - arm64
     - 386
+  goarm:
+    - 6
+    - 7
   ldflags:
-    - -s -w -X main.githash={{.ShortCommit}} -X main.version={{.Version}}
+    - -s -w -X github.com/42wim/vshare/version.GitHash={{.ShortCommit}}
 
-archive:
-  name_template: "{{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-  format: binary
-  files:
-    - none*
-  replacements:
-    386: 32bit
-    amd64: 64bit
+archives:
+  -
+    id: vshare 
+    builds:
+    - vshare 
+    name_template: "{{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    format: binary
+    files:
+      - none*
 
 checksum:
   name_template: 'checksums.txt'
-
