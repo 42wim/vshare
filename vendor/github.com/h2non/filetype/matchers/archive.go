@@ -4,28 +4,30 @@ var (
 	TypeEpub   = newType("epub", "application/epub+zip")
 	TypeZip    = newType("zip", "application/zip")
 	TypeTar    = newType("tar", "application/x-tar")
-	TypeRar    = newType("rar", "application/x-rar-compressed")
+	TypeRar    = newType("rar", "application/vnd.rar")
 	TypeGz     = newType("gz", "application/gzip")
 	TypeBz2    = newType("bz2", "application/x-bzip2")
 	Type7z     = newType("7z", "application/x-7z-compressed")
 	TypeXz     = newType("xz", "application/x-xz")
 	TypePdf    = newType("pdf", "application/pdf")
-	TypeExe    = newType("exe", "application/x-msdownload")
+	TypeExe    = newType("exe", "application/vnd.microsoft.portable-executable")
 	TypeSwf    = newType("swf", "application/x-shockwave-flash")
 	TypeRtf    = newType("rtf", "application/rtf")
 	TypeEot    = newType("eot", "application/octet-stream")
 	TypePs     = newType("ps", "application/postscript")
-	TypeSqlite = newType("sqlite", "application/x-sqlite3")
+	TypeSqlite = newType("sqlite", "application/vnd.sqlite3")
 	TypeNes    = newType("nes", "application/x-nintendo-nes-rom")
 	TypeCrx    = newType("crx", "application/x-google-chrome-extension")
 	TypeCab    = newType("cab", "application/vnd.ms-cab-compressed")
-	TypeDeb    = newType("deb", "application/x-deb")
+	TypeDeb    = newType("deb", "application/vnd.debian.binary-package")
 	TypeAr     = newType("ar", "application/x-unix-archive")
 	TypeZ      = newType("Z", "application/x-compress")
 	TypeLz     = newType("lz", "application/x-lzip")
 	TypeRpm    = newType("rpm", "application/x-rpm")
 	TypeElf    = newType("elf", "application/x-executable")
 	TypeDcm    = newType("dcm", "application/dicom")
+	TypeIso    = newType("iso", "application/x-iso9660-image")
+	TypeMachO  = newType("macho", "application/x-mach-binary") // Mach-O binaries have no common extension.
 )
 
 var Archive = Map{
@@ -54,6 +56,8 @@ var Archive = Map{
 	TypeRpm:    Rpm,
 	TypeElf:    Elf,
 	TypeDcm:    Dcm,
+	TypeIso:    Iso,
+	TypeMachO:  MachO,
 }
 
 func Epub(buf []byte) bool {
@@ -222,4 +226,21 @@ func Dcm(buf []byte) bool {
 	return len(buf) > 131 &&
 		buf[128] == 0x44 && buf[129] == 0x49 &&
 		buf[130] == 0x43 && buf[131] == 0x4D
+}
+
+func Iso(buf []byte) bool {
+	return len(buf) > 32773 &&
+		buf[32769] == 0x43 && buf[32770] == 0x44 &&
+		buf[32771] == 0x30 && buf[32772] == 0x30 &&
+		buf[32773] == 0x31
+}
+
+func MachO(buf []byte) bool {
+	return len(buf) > 3 && ((buf[0] == 0xFE && buf[1] == 0xED && buf[2] == 0xFA && buf[3] == 0xCF) ||
+		(buf[0] == 0xFE && buf[1] == 0xED && buf[2] == 0xFA && buf[3] == 0xCE) ||
+		(buf[0] == 0xBE && buf[1] == 0xBA && buf[2] == 0xFE && buf[3] == 0xCA) ||
+		// Big endian versions below here...
+		(buf[0] == 0xCF && buf[1] == 0xFA && buf[2] == 0xED && buf[3] == 0xFE) ||
+		(buf[0] == 0xCE && buf[1] == 0xFA && buf[2] == 0xED && buf[3] == 0xFE) ||
+		(buf[0] == 0xCA && buf[1] == 0xFE && buf[2] == 0xBA && buf[3] == 0xBE))
 }
