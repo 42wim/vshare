@@ -1,13 +1,14 @@
 package main
 
 import (
+	"embed"
 	"encoding/base64"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"strings"
 
-	rice "github.com/GeertJohan/go.rice"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -29,10 +30,23 @@ curl -sSL #here# > #output#
 `
 )
 
+//go:embed static
+var embededFiles embed.FS
+
+func getFileSystem() http.FileSystem {
+	fsys, err := fs.Sub(embededFiles, "static")
+	if err != nil {
+		panic(err)
+	}
+
+	return http.FS(fsys)
+}
+
 func handleInfo(c echo.Context) error {
 	url := os.Getenv("VSHARE_URL")
 	file := c.QueryParam("file")
 	info := template
+
 	if file != "" {
 		info = strings.ReplaceAll(info, "#here#", url+"/token/"+c.Param("token")+"?file="+file)
 		info = strings.ReplaceAll(info, "#output#", file)
@@ -40,33 +54,45 @@ func handleInfo(c echo.Context) error {
 		info = strings.ReplaceAll(info, "#here#", url+"/token/"+c.Param("token"))
 		info = strings.ReplaceAll(info, "#output#", "output.txt")
 	}
+
 	return c.HTML(http.StatusOK, info)
 }
 
 func handleToken(c echo.Context) error {
 	token := c.Param("token")
 	file := c.QueryParam("file")
+
 	secret, encoded, err := unWrap(token)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "invalid token")
 	}
+
 	if encoded {
-		data, _ := base64.StdEncoding.DecodeString(secret)
+		data, err := base64.StdEncoding.DecodeString(secret)
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "decoding failed")
+		}
+
 		c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf("%s; filename=%q", "attachment", file))
+
 		return c.Blob(http.StatusOK, http.DetectContentType(data), data)
 	}
+
 	return c.String(http.StatusOK, secret)
 }
 
 func startWeb(listen string) {
-	assetHandler := http.FileServer(rice.MustFindBox("static").HTTPBox())
+	assetHandler := http.FileServer(getFileSystem())
 	e := echo.New()
+
 	e.HideBanner = true
 	e.Use(middleware.Logger())
 	e.GET("/info/:token", handleInfo)
 	e.GET("/token/:token", handleToken)
 	e.GET("/static/*", echo.WrapHandler(http.StripPrefix("/static/", assetHandler)))
+
 	fmt.Printf("vault server: %s\n", os.Getenv("VAULT_ADDR"))
 	fmt.Printf("vshare server URL: %s\n", os.Getenv("VSHARE_URL"))
+
 	e.Logger.Fatal(e.Start(listen))
 }
